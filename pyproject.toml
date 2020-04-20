@@ -1,0 +1,48 @@
+# pyproject.toml configures a lot of developer tools
+# and makes command the package easier to use and install
+# in many ways.
+
+[build-system]
+requires = ["flit_core >=2,<3"]
+build-backend = "flit_core.buildapi"
+
+
+
+[tool.flit.metadata]
+module = "transit_simulation"
+author = ""
+author-email = ""
+home-page = "https://github.com/janpisl/Helsinki-public-transport-simulation"
+requires = [
+    # add dependencies to python packages in this array
+    "loguru",
+    "geopandas",
+    "numpy",
+    "matplotlib",
+
+    # these are dev-requires
+    "pytest",
+    "flake8",
+    "coverage"
+]
+
+requires-python = ">=3.5,<4"
+classifiers=[
+    'Development Status :: 2 - Pre-Alpha',
+    'Intended Audience :: Developers',
+    'Natural Language :: English',
+    'Programming Language :: Python :: 3',
+]
+description-file = "README.md"
+
+[tool.flit.scripts]
+
+transit_simulation = "transit_simulation.cli:main"
+
+
+[tool.flit.metadata.requires-extra]
+test = [
+]
+doc = [
+
+]
