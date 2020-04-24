@@ -1,0 +1,9 @@
+loguru
+geopandas
+numpy
+matplotlib
+
+# these are dev-requires
+pytest
+flake8
+coverage
