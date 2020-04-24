@@ -16,7 +16,7 @@ def second_to_hour(time_s: float):
     return time_h
 
 
-def simulate(route_file: str):
+def start_simulation(route_file: str):
     """simulation entry point, handel all simulation functions"""
 
     # data input
