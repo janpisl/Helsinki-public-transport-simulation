@@ -2,6 +2,7 @@ loguru
 geopandas
 numpy
 matplotlib
+flask
 
 # these are dev-requires
 pytest

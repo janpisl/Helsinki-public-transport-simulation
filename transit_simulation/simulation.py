@@ -25,10 +25,11 @@ def start_simulation(route_file: str):
     # data analysis
     time = calculate_travel_time(route)
 
-    # result ouput
-    logger.info(f'total travel time: {time} seconds')
+    return time
 
-    return 0
+
+
+
 
 def calculate_travel_time(route) -> float:
     """given a pandas dataframe with line geometry, calculate the total travel time
