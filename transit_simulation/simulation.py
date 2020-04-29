@@ -22,13 +22,9 @@ def next_location_along_route(current_location: Point, route: LineString, distan
     """Calculate where the `next_location` is when travelling `distance` along `route` from `location`
     Geometry object assumed to be shapley geometries"""
 
-    # distance along route from start of route
     current_distance = route.project(current_location)
-    logger.debug(f'current_distance: {current_distance}')
     next_distance = current_distance + distance
-    logger.debug(f'next_distance: {next_distance}')
     next_location = route.interpolate(next_distance)
-    logger.debug(f'next_location: {next_location}')
 
     return next_location
 
@@ -43,10 +39,6 @@ def start_simulation(route_file: str):
     time = calculate_travel_time(route)
 
     return time
-
-
-
-
 
 def calculate_travel_time(route) -> float:
     """given a pandas dataframe with line geometry, calculate the total travel time
