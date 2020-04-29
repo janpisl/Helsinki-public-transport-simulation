@@ -3,6 +3,7 @@
 from loguru import logger
 import geopandas as gpd
 import numpy as np
+from shapely.geometry import LineString, Point
 
 
 def kmph_to_mps(speed_kms: float):
@@ -14,6 +15,22 @@ def second_to_hour(time_s: float):
     """Helper function, given seconds, return hours"""
     time_h = time_s / 60 / 60
     return time_h
+
+
+
+def next_location_along_route(current_location: Point, route: LineString, distance: float):
+    """Calculate where the `next_location` is when travelling `distance` along `route` from `location`
+    Geometry object assumed to be shapley geometries"""
+
+    # distance along route from start of route
+    current_distance = route.project(current_location)
+    logger.debug(f'current_distance: {current_distance}')
+    next_distance = current_distance + distance
+    logger.debug(f'next_distance: {next_distance}')
+    next_location = route.interpolate(next_distance)
+    logger.debug(f'next_location: {next_location}')
+
+    return next_location
 
 
 def start_simulation(route_file: str):

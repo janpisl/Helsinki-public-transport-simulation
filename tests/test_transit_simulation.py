@@ -6,6 +6,7 @@ import pytest
 
 import geopandas as gpd
 from transit_simulation import transit_simulation as ts
+from shapely.geometry import LineString, Point
 
 
 @pytest.fixture
@@ -15,6 +16,21 @@ def input_data():
     """
     # import requests
     # return requests.get('https://github.com/audreyr/cookiecutter-pypackage')
+
+def test_next_location_along_route():
+
+    route = LineString([(0, 300), (150, 300), (220, 370)])
+
+    # current location in already on a route node
+    assert ts.next_location_along_route(Point(0,300), route, 50) == Point(50,300)
+    # current location is on the route, but not on a route node
+    assert ts.next_location_along_route(Point(10,300), route, 50) == Point(60,300)
+    assert ts.next_location_along_route(Point(2,300), route, 50) == Point(52,300)
+    # current location is not at all on the route, it is snapped to the route
+    # before determining the next location
+    assert ts.next_location_along_route(Point(10,303), route, 50) == Point(60,300)
+    # due to float inaccuracies, can't use `==` comparison. doing point-in-polygon check insead 
+    assert Point(50.5,300).buffer(0.0000001).contains(ts.next_location_along_route(Point(0,300), route, 50.5))
 
 def test_second_to_hour():
     assert ts.second_to_hour(3600) == 1
