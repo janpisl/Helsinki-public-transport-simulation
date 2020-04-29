@@ -2,6 +2,8 @@ loguru
 geopandas
 numpy
 matplotlib
+paho
+geopy
 
 # these are dev-requires
 pytest
