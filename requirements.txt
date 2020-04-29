@@ -2,6 +2,7 @@ loguru
 geopandas
 numpy
 matplotlib
+flask
 paho-mqtt
 geopy
 
