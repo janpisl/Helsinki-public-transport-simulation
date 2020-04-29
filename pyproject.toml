@@ -20,6 +20,8 @@ requires = [
     "numpy",
     "matplotlib",
     "flask",
+    "paho-mqtt",
+    "geopy",
 
     # these are dev-requires
     "pytest",
