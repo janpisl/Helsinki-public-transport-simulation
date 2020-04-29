@@ -2,7 +2,8 @@ loguru
 geopandas
 numpy
 matplotlib
-paho
+flask
+paho-mqtt
 geopy
 
 # these are dev-requires
