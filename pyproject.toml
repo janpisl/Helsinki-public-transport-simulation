@@ -19,6 +19,8 @@ requires = [
     "geopandas",
     "numpy",
     "matplotlib",
+    "paho-mqtt",
+    "geopy"
 
     # these are dev-requires
     "pytest",
