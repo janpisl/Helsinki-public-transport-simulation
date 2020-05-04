@@ -2,7 +2,7 @@ import uuid
 
 class Vehicle:
     """
-    
+    Base class for vehicle agents
     """
     def __init__(self, origin, destination):
         self.id = uuid.uuid4()
@@ -16,13 +16,12 @@ class Vehicle:
         raise NotImplementedError()
     
     def find_route(self, origin, destination):
-
+        raise NotImplementedError()
 
 
 class Bus(Vehicle):
     def __init__(self, origin, destination):
         super().__init__(origin, destination)
-    
 
 class Car(Vehicle):
     def __init__(self, origin, destination):
