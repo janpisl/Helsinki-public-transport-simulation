@@ -29,7 +29,7 @@ def next_location_along_route(current_location: Point, route: LineString, distan
     return next_location
 
 
-def start_simulation(route_file: str):
+def start_simulation(data_dir: str):
     """simulation entry point, handel all simulation functions"""
 
     # data input
@@ -39,6 +39,18 @@ def start_simulation(route_file: str):
     time = calculate_travel_time(route)
 
     return time
+
+    environment = load_environment_attr_layers()
+    # shall be a file with linestirng geometry, each line has uinque id attribute
+    # may be used for both generic agetns, and public transport
+    # if routes get big, use geopackage instead. But this is convenient for debugging
+    routes = gpd.read_file(f'{data_dir}/routes.geojson')
+    # table of timestamps (iso8601 sting, or seconds since an epoch)
+    schedule = gpd.pd.read_csv(f'{data_dir}/schedule.csv')
+
+    agents = []
+
+    
 
 def calculate_travel_time(route) -> float:
     """given a pandas dataframe with line geometry, calculate the total travel time
