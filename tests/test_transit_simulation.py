@@ -38,6 +38,7 @@ def test_second_to_hour():
 def test_kmh_to_ms():
     assert ts.simulation.kmph_to_mps(3.6) == 1
 
+
 def test_calculate_travel_time():
 
     # read the test route shapefile from the test data directory
@@ -54,3 +55,7 @@ def test_calculate_travel_time():
 
     # travel 4.5 km at 40 km/h takes about 0.11 hours
     assert 0.10 < time_h < 0.12
+
+
+def test_start_simulation():
+    ts.simulation.start_simulation('tests/test_data/simulation_1', 0, 500, 1)
