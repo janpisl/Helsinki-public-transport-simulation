@@ -1,6 +1,11 @@
+import pandas as pd
+import geopandas as gpd
+from shapely.geometry import LineString
 import requests
+from io import BytesIO
+from zipfile import ZipFile
 
-def fetch_route(bus_route_id, direction, d_date, d_time):
+def fetch_route_rt(bus_route_id, direction, d_date, d_time):
     '''
     Args:
         bus_route_id - identifier of a route
@@ -24,10 +29,49 @@ def fetch_route(bus_route_id, direction, d_date, d_time):
     
     return route
 
-if __name__ == "__main__":
-    route_id = 1071
-    direction = 1
-    d_date = "2020-04-29"
-    d_time = 16800
+def fetch_HSL_gtfs_shapes():
+    '''Returns:
+    shape_df: A Pandas dataframe containing the information from the shapes.txt
+        file of a GTFS package.
+    '''
+    url = 'http://dev.hsl.fi/gtfs/hsl.zip'
     
-    pointlist = fetch_route(route_id, direction, d_date, d_time)
+    r = requests.get(url)
+    gtfs_zip = ZipFile(BytesIO(r.content))
+    shape_df = pd.read_csv(gtfs_zip.open('shapes.txt'))
+    
+    return shape_df
+
+def process_gtfs_shapes(shapes_data):
+    '''Args:
+    shapes_data: A pandas DataFrame containing data of shapes.txt in a gtfs package.
+        Practically route ids and points along the route.
+    
+    Returns:
+    routes: A GeoPandas GeoDataFrame containing unique route ids and the corresponding
+        route LineString as geometry.
+    '''
+    geodata = gpd.GeoDataFrame(shapes_data, geometry=gpd.points_from_xy(shapes_data.shape_pt_lat, shapes_data.shape_pt_lon))
+    routes = geodata.groupby(['shape_id'])['geometry'].apply(lambda x: LineString(x.tolist()))
+    return routes
+
+
+if __name__ == "__main__":
+    def experiment_rt():
+        route_id = 1071
+        direction = 1
+        d_date = "2020-04-29"
+        d_time = 16800
+
+        pointlist = fetch_route(route_id, direction, d_date, d_time)
+        print(pointlist)
+    
+    def experiment_gtfs():
+        shapes = fetch_HSL_gtfs_shapes()
+        print('Contents of the shapes.txt:')
+        print(shapes.head())
+        routes = process_gtfs_shapes(shapes)
+        print('Processed route data:')
+        print(routes.head())
+    
+    experiment_gtfs()
