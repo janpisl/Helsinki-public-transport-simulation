@@ -38,6 +38,11 @@ def test_second_to_hour():
 def test_kmh_to_ms():
     assert ts.simulation.kmph_to_mps(3.6) == 1
 
+def test_agents_to_gdf():
+    agents = [ts.agent.MockAgent(LineString([(0,0), (10,10)]))]
+    snapshot = ts.simulation.agents_to_gdf(agents)
+    assert isinstance(snapshot, gpd.GeoDataFrame)
+
 
 def test_calculate_travel_time():
 
@@ -58,4 +63,4 @@ def test_calculate_travel_time():
 
 
 def test_start_simulation():
-    ts.simulation.start_simulation('tests/test_data/simulation_1', 0, 500, 1)
+    ts.simulation.start_simulation('tests/test_data/simulation_1', 0, 10, 1)

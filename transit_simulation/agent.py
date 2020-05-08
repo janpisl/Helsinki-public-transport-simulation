@@ -20,6 +20,7 @@ class MockAgent():
         assert isinstance(route, LineString)
         self.route = route
         self.done = False
+        self.type = 'mock'
         self.location = Point(route.coords[0])
 
     def tick(self,tick_len):
