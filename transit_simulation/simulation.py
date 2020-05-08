@@ -3,8 +3,15 @@
 from loguru import logger
 import geopandas as gpd
 import numpy as np
+from typing import List
 from shapely.geometry import LineString, Point
+from transit_simulation.agent import MockAgent, create_agent
 
+EUREF_FIN_TM35_FIN_EPSG  = 'EPSG:102139'
+ETRS89_TM35_FIN_EPSG  = 'EPSG:3067'
+UTM_ZONE_35N = 'EPSG:32635'
+WGS84 = 'EPSG:4326'
+GEOM_PROCESSING_CRS = UTM_ZONE_35N
 
 def kmph_to_mps(speed_kms: float):
     """Helper function, given km/h, retun m/s"""
@@ -18,7 +25,7 @@ def second_to_hour(time_s: float):
 
 
 
-def next_location_along_route(current_location: Point, route: LineString, distance: float):
+def next_location_along_route(current_location: Point, route: LineString, distance: float) -> Point:
     """Calculate where the `next_location` is when travelling `distance` along `route` from `location`
     Geometry object assumed to be shapley geometries"""
 
@@ -29,16 +36,66 @@ def next_location_along_route(current_location: Point, route: LineString, distan
     return next_location
 
 
-def start_simulation(route_file: str):
+def agents_to_gdf(agents:List) -> gpd.GeoDataFrame:
+    """Given a list of agents, writes the simulation status (agent states, etc) to `filename`
+    The output file is a geo data files from a GeoDataFrame"""
+    points = [agent.location for agent in agents]
+    snapshot = gpd.GeoDataFrame(geometry = points, crs=GEOM_PROCESSING_CRS)
+    return snapshot
+
+def start_simulation(data_dir: str, start_time:float, end_time:float, tick_len:float):
     """simulation entry point, handel all simulation functions"""
+    logger.debug('reading simulation environment')
+    environment = {
+        'speed_limit': gpd.read_file(f'{data_dir}/env_speed_limit.geojson').to_crs(GEOM_PROCESSING_CRS)
+    }
 
-    # data input
-    route = gpd.read_file(route_file)
+    # shall be a file with linestirng geometry, each line has uinque id attribute
+    # may be used for both generic agetns, and public transport
+    # if routes get big, use geopackage instead. But this is convenient for debugging
+    logger.debug('reading agent route geometries')
+    routes = gpd.read_file(f'{data_dir}/routes.geojson').to_crs(GEOM_PROCESSING_CRS)
+    logger.debug(routes.columns)
 
-    # data analysis
-    time = calculate_travel_time(route)
+    # table of timestamps (iso8601 sting, or seconds since an epoch)
+    logger.debug('reading agent schedule')
+    schedule_df = gpd.pd.read_csv(f'{data_dir}/schedule.csv')
 
-    return time
+
+    agents = []          # the list of agents currently in the simulation
+    sim_time = start_time         # timulation time, seconds since an epoch
+
+    logger.debug('starting simulation')
+    while sim_time < end_time:
+        # check the schelude of new agents and add them to the simulation
+        departures = schedule_df[(sim_time <= schedule_df.start_time) & (schedule_df.start_time < sim_time + tick_len)]
+        logger.debug(f'simulation time: {sim_time}')
+        logger.debug(f'new departures: {len(departures)}')
+
+        for idx, departure in departures.iterrows():
+            logger.debug(departure.route_id)
+            logger.debug(routes.route_id)
+            new_agent = create_agent(
+                route = routes[routes.route_id == departure.route_id].geometry.iloc[0 ],
+                type = departure.type
+            )
+            agents.append(new_agent)
+
+        # handle tick and destruction of all currnet agents
+        for idx, agent in enumerate(agents):
+            agent.tick(tick_len)
+
+            if agent.done:
+                del agents[idx]
+
+        if len(agents) != 0:
+            snapshot = agents_to_gdf(agents)
+            snapshot['timestamp'] = sim_time
+            snapshot = snapshot.to_crs(WGS84)
+            snapshot.to_file(f'{data_dir}/snapshot_{sim_time}.geojson', driver="GeoJSON")
+
+        sim_time += tick_len
+
 
 def calculate_travel_time(route) -> float:
     """given a pandas dataframe with line geometry, calculate the total travel time

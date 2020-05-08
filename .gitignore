@@ -44,3 +44,6 @@ ENV/
 
 # IDE settings
 .vscode/
+assignments
+tests/tests_data/simulation_1/snapshot*
+tests/test_data/simulation_1/snapshot*
