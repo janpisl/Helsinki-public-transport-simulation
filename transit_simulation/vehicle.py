@@ -4,10 +4,14 @@ class Vehicle:
     """
     Base class for vehicle agents
     """
-    def __init__(self, origin, destination):
+    def __init__(self,route):
         self.id = uuid.uuid4()
-        self.current_location = origin
-        self.route = self.find_route(origin, destination)
+        self.current_location = self.origin(route)
+        self.route = route
+
+    def origin(self, route):
+    """This will just be a one-liner
+    """
 
     def tick(self):
         self.current_location = move()
@@ -15,15 +19,13 @@ class Vehicle:
     def move(self):
         raise NotImplementedError()
     
-    def find_route(self, origin, destination):
-        raise NotImplementedError()
 
 
 class Bus(Vehicle):
-    def __init__(self, origin, destination):
-        super().__init__(origin, destination)
+    def __init__(self, route):
+        super().__init__(route)
 
 class Car(Vehicle):
-    def __init__(self, origin, destination):
-        super().__init__(origin, destination)
+    def __init__(self, route):
+        super().__init__(route)
     
