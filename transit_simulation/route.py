@@ -71,7 +71,9 @@ def process_gtfs_shapes(shapes_data):
         Practically route ids and points along the route.
     
     Returns:
+
     routes: A GeoPandas GeoDataFrame containing unique shape ids and the corresponding
+
         route LineString as geometry.
     '''
     geodata = gpd.GeoDataFrame(shapes_data, geometry=gpd.points_from_xy(shapes_data.shape_pt_lat, shapes_data.shape_pt_lon))
