@@ -42,18 +42,82 @@ def fetch_HSL_gtfs_shapes():
     
     return shape_df
 
+def fetch_HSL_gtfs_data():
+    '''Returns:
+    shape_df: A Pandas dataframe containing the information from the shapes.txt
+        file of a GTFS package.
+    trips_df: A Pandas dataframe containing the information from the trips.txt
+        file of a GTFS package.
+    calendar_df: A Pandas dataframe containing the information from the calendar.txt
+        file of a GTFS package.
+    route_df: A Pandas dataframe containing the information from the routes.txt
+        file of a GTFS package.
+    
+    '''
+    url = 'http://dev.hsl.fi/gtfs/hsl.zip'
+    
+    r = requests.get(url)
+    gtfs_zip = ZipFile(BytesIO(r.content))
+    shape_df = pd.read_csv(gtfs_zip.open('shapes.txt'))
+    trips_df = pd.read_csv(gtfs_zip.open('trips.txt'))
+    calendar_df = pd.read_csv(gtfs_zip.open('calendar.txt'))
+    route_df = pd.read_csv(gtfs_zip.open('routes.txt'))
+    
+    return shape_df, trips_df, calendar_df, route_df
+
 def process_gtfs_shapes(shapes_data):
     '''Args:
     shapes_data: A pandas DataFrame containing data of shapes.txt in a gtfs package.
         Practically route ids and points along the route.
     
     Returns:
-    routes: A GeoPandas GeoDataFrame containing unique route ids and the corresponding
+    routes: A GeoPandas GeoDataFrame containing unique shape ids and the corresponding
         route LineString as geometry.
     '''
     geodata = gpd.GeoDataFrame(shapes_data, geometry=gpd.points_from_xy(shapes_data.shape_pt_lat, shapes_data.shape_pt_lon))
     routes = geodata.groupby(['shape_id'])['geometry'].apply(lambda x: LineString(x.tolist()))
     return routes
+
+def process_gtfs_schedule(trips_df, calendar_df, route_df, simulation_date=pd.to_datetime('today')):
+    '''Args:
+    trips_df: A Pandas dataframe containing the information from the trips.txt
+        file of a GTFS package.
+    calendar_df: A Pandas dataframe containing the information from the calendar.txt
+        file of a GTFS package.
+    route_df: A Pandas dataframe containing the information from the routes.txt
+        file of a GTFS package.
+    simulation_date: A datetime object defining from which date to fetch the schedule data.
+        
+    Returns:
+    schedule: Pandas dataframe containing shape ids, vehicle departure times and vehicle types
+        for agent initalization.'''
+    df = trips_df.set_index('service_id').join(calendar_df.set_index('service_id'))
+    df.start_date = pd.to_datetime(df.start_date, format='%Y%m%d'); df.end_date = pd.to_datetime(df.end_date, format='%Y%m%d')
+    df.loc[df.monday==1, 'weekday'] = 0; df.loc[df.tuesday==1, 'weekday'] = 1; df.loc[df.wednesday==1, 'weekday'] = 2; df.loc[df.thursday==1, 'weekday'] = 3; df.loc[df.friday==1, 'weekday'] = 4; df.loc[df.saturday==1, 'weekday'] = 5; df.loc[df.sunday==1, 'weekday'] = 6
+    df = df[(df.weekday==simulation_date.weekday()) & (df.start_date<=simulation_date) & (df.end_date>=simulation_date)]
+    
+    df['d_time'] = df.trip_id.str[-4:]
+    df['d_time'] = pd.to_datetime(df['d_time'], errors='coerce', format='%H%M').dt.time
+    
+    df = pd.merge(df, route_df[['route_id', 'route_type']], on='route_id', how='left')
+    schedule = df.reset_index().loc[:,['shape_id', 'd_time', 'route_type']]
+    
+    return schedule
+	
+def create_initialization_data(simulation_date=pd.to_datetime('today')):
+	'''Args:
+    simulation_date: Pandas datetime object defining the date for which the simulation will be run.
+    
+    Returns:
+	route_df: A GeoPandas GeoDataFrame containing unique shape ids and the corresponding
+        route LineString as geometry.
+    schedule_df: Pandas dataframe containing shape ids, vehicle departure times and vehicle types
+        for agent initalization.'''
+	shape_df, trips_df, calendar_df, route_df = fetch_HSL_gtfs_data()
+	route_df = process_gtfs_shapes(shape_df)
+	schedule_df = process_gtfs_schedule(trips_df, calendar_df, route_df, simulation_date=simulation_date)
+	
+	return route_df, schedule_df
 
 
 if __name__ == "__main__":
@@ -67,11 +131,15 @@ if __name__ == "__main__":
         print(pointlist)
     
     def experiment_gtfs():
-        shapes = fetch_HSL_gtfs_shapes()
+        print('Fetching data')
+        shapes_df, trips_df, calendar_df, routes_df = fetch_HSL_gtfs_data()
         print('Contents of the shapes.txt:')
-        print(shapes.head())
-        routes = process_gtfs_shapes(shapes)
+        print(shapes_df.head())
+        routes = process_gtfs_shapes(shapes_df)
         print('Processed route data:')
         print(routes.head())
+        schedule = process_gtfs_schedule(trips_df, calendar_df, routes_df)
+        print('Processed schedule data:')
+        print(schedule.head())
     
     experiment_gtfs()
