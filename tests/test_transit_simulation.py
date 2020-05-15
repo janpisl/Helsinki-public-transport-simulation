@@ -7,7 +7,8 @@ import pytest
 import geopandas as gpd
 import transit_simulation as ts
 from shapely.geometry import LineString, Point
-
+import glob
+import shutil
 
 @pytest.fixture
 def input_data():
@@ -61,6 +62,17 @@ def test_calculate_travel_time():
     # travel 4.5 km at 40 km/h takes about 0.11 hours
     assert 0.10 < time_h < 0.12
 
+# RID:JK: the simulation test should use pytest.parametrize
+def test_start_simulation_1_short():
+    ts.simulation.start_simulation('tests/test_data/simulation_1', 8, 10, 1)
+    # the simulation is too short for any snapshots to be created.
+    assert len(glob.glob('tests/test_data/simulation_1/output/*')) == 0
+    shutil.rmtree('tests/test_data/simulation_1/output')
 
-def test_start_simulation():
-    ts.simulation.start_simulation('tests/test_data/simulation_1', 0, 10, 1)
+def test_start_simulation_1_two_snapshots():
+
+    ts.simulation.start_simulation('tests/test_data/simulation_1', 0, 60*2 + 1, 1)
+    # snapshots for 0, 60, and 120
+    assert len(glob.glob('tests/test_data/simulation_1/output/*')) == 2
+    # clean up all output data
+    shutil.rmtree('tests/test_data/simulation_1/output')

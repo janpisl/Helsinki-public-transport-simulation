@@ -6,6 +6,7 @@ import numpy as np
 from typing import List
 from shapely.geometry import LineString, Point
 from transit_simulation.agent import MockAgent, create_agent
+from pathlib import Path
 
 EUREF_FIN_TM35_FIN_EPSG  = 'EPSG:102139'
 ETRS89_TM35_FIN_EPSG  = 'EPSG:3067'
@@ -43,8 +44,15 @@ def agents_to_gdf(agents:List) -> gpd.GeoDataFrame:
     snapshot = gpd.GeoDataFrame(geometry = points, crs=GEOM_PROCESSING_CRS)
     return snapshot
 
+def bake_datasets(data_dir: str):
+    pass
+
 def start_simulation(data_dir: str, start_time:float, end_time:float, tick_len:float):
     """simulation entry point, handel all simulation functions"""
+
+    # create the output directory, if it doesn't exist yet
+    Path(data_dir, 'output').mkdir(parents=True, exist_ok=True)
+
     logger.debug('reading simulation environment')
     environment = {
         'speed_limit': gpd.read_file(f'{data_dir}/env_speed_limit.geojson').to_crs(GEOM_PROCESSING_CRS)
@@ -64,7 +72,7 @@ def start_simulation(data_dir: str, start_time:float, end_time:float, tick_len:f
 
     agents = []          # the list of agents currently in the simulation
     sim_time = start_time         # timulation time, seconds since an epoch
-
+    last_snapshot = 0   # we don't make snapshots on every tick
     logger.debug('starting simulation')
     while sim_time < end_time:
         # check the schelude of new agents and add them to the simulation
@@ -88,11 +96,16 @@ def start_simulation(data_dir: str, start_time:float, end_time:float, tick_len:f
             if agent.done:
                 del agents[idx]
 
-        if len(agents) != 0:
+        # There are agents, and more than 60 seconds since last snapshot
+
+        if (len(agents) != 0) & ((sim_time - last_snapshot) >= 60):
+            logger.debug(f'writing snapshot: sim_time: {sim_time}')
+            last_snapshot = sim_time
             snapshot = agents_to_gdf(agents)
             snapshot['timestamp'] = sim_time
+            # RID:JK: this file preprojection + write is slow.
             snapshot = snapshot.to_crs(WGS84)
-            snapshot.to_file(f'{data_dir}/snapshot_{sim_time}.geojson', driver="GeoJSON")
+            snapshot.to_file(f'{data_dir}/output/snapshot_{sim_time}.geojson', driver="GeoJSON")
 
         sim_time += tick_len
 

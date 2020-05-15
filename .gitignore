@@ -47,3 +47,7 @@ ENV/
 assignments
 tests/tests_data/simulation_1/snapshot*
 tests/test_data/simulation_1/snapshot*
+tests/test_data/**/output/*
+# QGIS project files
+*.qgz
+data/
