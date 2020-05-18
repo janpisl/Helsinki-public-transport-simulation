@@ -5,13 +5,13 @@ import numpy
 from shapely.geometry import Point
 
 
-def check_speed_limit_at_location(speed_input_file, location, buffer_size=50):
+def check_speed_limit_at_location(speed_input_file, agent_location, buffer_size=50):
 	"""
 	Checks the speed limit at a given location.
 
 	Parameters:
 	speed_input_file: path to road network file with speed attribute
-	location: point coordinates in a list
+	location: shapely geometry as Point with agent's current location
 	buffer_size: buffer size (default value 50m)
 
 	Returns:
@@ -19,14 +19,13 @@ def check_speed_limit_at_location(speed_input_file, location, buffer_size=50):
 	"""
 
 	# create buffer around location
-	point_geometry = Point(location[0], location[1])
-	point_buffer = point_geometry.buffer(buffer_size)
+	point_buffer = agent_location.buffer(buffer_size)
 
 	# read data inside the buffer
 	speed_limit_dataframe = geopandas.read_file(filename=speed_input_file, bbox=point_buffer)
 
 	# create geopandas.geoseries from point geometry
-	point_geoseries = geopandas.GeoSeries([point_geometry])
+	point_geoseries = geopandas.GeoSeries([agent_location])
 
 	# calculate distances between roads and point
 	distances_to_point = [point_geoseries.distance(line).values[0] for line in speed_limit_dataframe.geometry]
@@ -44,4 +43,5 @@ def check_speed_limit_at_location(speed_input_file, location, buffer_size=50):
 
 if __name__ == "__main__":
 	example_location = [385306.0644, 6671652.982]
-	speed_limit = check_speed_limit_at_location(sys.argv[1], example_location)
+	agent_location = Point(example_location[0], example_location[1])
+	speed_limit = check_speed_limit_at_location(sys.argv[1], agent_location)
