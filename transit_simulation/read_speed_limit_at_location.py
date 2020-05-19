@@ -16,6 +16,7 @@ def check_speed_limit_at_location(speed_input_file, location, buffer_size=50):
 
 	Returns:
 	int: speed limit
+    int: number of digiroad geometry elements within the buffer
 	"""
 
 	# create buffer around location
@@ -38,8 +39,11 @@ def check_speed_limit_at_location(speed_input_file, location, buffer_size=50):
 	shortest_distance_idx = selected_columns.idxmin(axis=0, skipna=True)['Distance']
 	# read the speed limit value
 	speed_limit_at_location = speed_limit_dataframe.at[shortest_distance_idx,'ARVO']
+    
+    # find the number of digiroad elements within the buffer
+    n_elements = speed_limit_dataframe.shape[0]
 
-	return speed_limit_at_location
+	return speed_limit_at_location, n_elements
 
 
 if __name__ == "__main__":
