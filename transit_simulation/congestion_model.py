@@ -24,12 +24,13 @@ def intersection_status(n_intersections):
 
     Returns:
     status: a scaler of speed in range [1, 0.1]'''
-    power = 2
+    power = 3
+    high_limit = 20
     n_intersections = np.asarray(n_intersections)
     
     status = np.zeros(n_intersections.shape)
-    status[n_intersections<25] = (n_intersections**(power)/20**power/power)[n_intersections<25]
-    status[n_intersections>=25] = 0.9
+    status[n_intersections<high_limit] = (0.9*n_intersections**(power)/high_limit**power)[n_intersections<high_limit]
+    status[n_intersections>=high_limit] = 0.9
 
     return 1-status
 
