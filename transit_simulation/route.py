@@ -123,7 +123,7 @@ def create_initialization_data(simulation_date=pd.to_datetime('today')):
 	return route_df, schedule_df
 
 
-def initialize_random_routes(sample_nr=20):
+def initialize_random_routes(sample_nr=20): # if the sample_nr is less or equal to 0, all samples are used
     print('Fetching data')
     shapes_df, trips_df, calendar_df, routes_df = fetch_HSL_gtfs_data()
     routes = process_gtfs_shapes(shapes_df)
@@ -139,7 +139,11 @@ def initialize_random_routes(sample_nr=20):
     routes_clip = gpd.clip(geo_routes, simulation_extent, keep_geom_type=True)
 
     # select sample_nr of samples in simulation extent
-    sample_routes = routes_clip.sample(sample_nr)
+    # if the number of samples is not valid, then all elements are used
+    if sample_nr <= 0:
+        sample_routes = routes_clip
+    else:
+        sample_routes = routes_clip.sample(sample_nr)
 
     # check for MultiLineStrings that are the result of cutting off part of the route by extent polygon
     multilines = sample_routes.loc[sample_routes['geometry'].geom_type.values == 'MultiLineString']
@@ -178,6 +182,12 @@ def initialize_random_routes(sample_nr=20):
 
     return sample_routes
 
+def preprocess_data_to_files():
+    raise NotImplementedError
+    routes = initialize_random_routes()
+
+    routes.to_file(str(path / 'routes.geojson'), driver="GeoJSON")
+    schedule.to_csv(str(path / 'schedule.csv'))
 
 
 if __name__ == "__main__":
