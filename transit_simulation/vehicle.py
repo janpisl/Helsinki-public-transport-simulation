@@ -39,4 +39,3 @@ class Bus:
         
         return congested_speed
 
-    
