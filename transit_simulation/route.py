@@ -4,6 +4,7 @@ from shapely.geometry import LineString
 import requests
 from io import BytesIO
 from zipfile import ZipFile
+from pathlib import Path
 
 def fetch_route_rt(bus_route_id, direction, d_date, d_time):
     '''
@@ -76,7 +77,7 @@ def process_gtfs_shapes(shapes_data):
 
         route LineString as geometry.
     '''
-    geodata = gpd.GeoDataFrame(shapes_data, geometry=gpd.points_from_xy(shapes_data.shape_pt_lat, shapes_data.shape_pt_lon))
+    geodata = gpd.GeoDataFrame(shapes_data, geometry=gpd.points_from_xy(shapes_data.shape_pt_lon, shapes_data.shape_pt_lat))
     routes = geodata.groupby(['shape_id'])['geometry'].apply(lambda x: LineString(x.tolist()))
     return routes
 
@@ -122,6 +123,63 @@ def create_initialization_data(simulation_date=pd.to_datetime('today')):
 	return route_df, schedule_df
 
 
+def initialize_random_routes(sample_nr=20):
+    print('Fetching data')
+    shapes_df, trips_df, calendar_df, routes_df = fetch_HSL_gtfs_data()
+    routes = process_gtfs_shapes(shapes_df)
+
+    # read simulation extent from geojson
+    data_path = Path("./tests/test_data")
+    simulation_extent = gpd.read_file(data_path / 'simulation_extent.geojson')
+
+    # create data frame with routes transformed to metric crs
+    geo_routes = gpd.GeoDataFrame(routes, geometry=routes.values, crs='EPSG:4326').to_crs(simulation_extent.crs)
+
+    # clip routes with simulation extent
+    routes_clip = gpd.clip(geo_routes, simulation_extent, keep_geom_type=True)
+
+    # select sample_nr of samples in simulation extent
+    sample_routes = routes_clip.sample(sample_nr)
+
+    # check for MultiLineStrings that are the result of cutting off part of the route by extent polygon
+    multilines = sample_routes.loc[sample_routes['geometry'].geom_type.values == 'MultiLineString']
+    if multilines.shape[0] > 0:
+        # drop multilinestrings from the main table for further processing
+        sample_routes = sample_routes.drop(multilines.index)
+
+        multiline_indexes = multilines.index.to_list()
+
+        multiline_geometry = multilines.geometry.values
+
+        # initialize placeholders for new linestrings
+        new_indexes =[]
+        new_geometry = []
+
+        # split multilinestrings into linestrings
+        for i in range(len(multiline_geometry)):
+            multi = multiline_geometry[i]
+            multicoords = [list(line.coords) for line in multi]
+            for j, sublist in enumerate(multicoords):
+                new_linestring = LineString(sublist)
+                # use only linestrings longer than 1000m
+                if new_linestring.length > 1000:
+                    new_indexes.append(multiline_indexes[i] + '_' + str(j))
+                    new_geometry.append(new_linestring)
+
+
+        if new_indexes and new_geometry:
+            new_linestrings =  gpd.GeoDataFrame(gpd.GeoSeries(new_geometry, new_indexes, crs=sample_routes.crs))
+            new_linestrings = new_linestrings.rename(columns={0:'geometry'}).set_geometry('geometry')
+            sample_routes = pd.concat([sample_routes, new_linestrings])
+
+        # write generated routes to file
+        # output_path = str(data_path / 'random_routes2.geojson')
+        # sample_routes.to_file(output_path, driver="GeoJSON")
+
+    return sample_routes
+
+
+
 if __name__ == "__main__":
     def experiment_rt():
         route_id = 1071
@@ -144,4 +202,5 @@ if __name__ == "__main__":
         print('Processed schedule data:')
         print(schedule.head())
     
+    random_df = initialize_random_routes(60)
     experiment_gtfs()
