@@ -6,9 +6,9 @@ from shapely.geometry import Point
 import transit_simulation.read_speed_limit_at_location as read_speed
 import transit_simulation.congestion_model as congestion
 
-class Vehicle:
+class Bus:
     """
-    Base class for vehicle agents
+    Describes the Bus object in the simulation
     """
     def __init__(self,route):
         self.id = uuid.uuid4()
@@ -38,14 +38,5 @@ class Vehicle:
         congested_speed = congestion.congested_speed(speed_limit, time_of_day, n_road_elements)
         
         return congested_speed
-    
 
-
-class Bus(Vehicle):
-    def __init__(self, route):
-        super().__init__(route)
-
-class Car(Vehicle):
-    def __init__(self, route):
-        super().__init__(route)
     
