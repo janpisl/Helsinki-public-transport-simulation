@@ -105,7 +105,7 @@ def process_gtfs_schedule(trips_df, calendar_df, route_df, simulation_date=pd.to
     df = pd.merge(df, route_df[['route_id', 'route_type']], on='route_id', how='left')
     schedule = df.reset_index().loc[:,['shape_id', 'd_time', 'route_type']]
     
-    return schedule
+    return schedule.dropna()
 	
 def create_initialization_data(simulation_date=pd.to_datetime('today')):
 	'''Args:
@@ -123,9 +123,10 @@ def create_initialization_data(simulation_date=pd.to_datetime('today')):
 	return route_df, schedule_df
 
 
-def initialize_random_routes(sample_nr=20): # if the sample_nr is less or equal to 0, all samples are used
+def initialize_random_routes(sample_nr=20, simulation_date=pd.to_datetime('today')): # if the sample_nr is less or equal to 0, all samples are used
     print('Fetching data')
-    shapes_df, trips_df, calendar_df, routes_df = fetch_HSL_gtfs_data()
+    shapes_df, trips_df, calendar_df, route_df = fetch_HSL_gtfs_data()
+    print('Processing data')
     routes = process_gtfs_shapes(shapes_df)
 
     # read simulation extent from geojson
@@ -179,16 +180,29 @@ def initialize_random_routes(sample_nr=20): # if the sample_nr is less or equal 
         # write generated routes to file
         # output_path = str(data_path / 'random_routes2.geojson')
         # sample_routes.to_file(output_path, driver="GeoJSON")
+        
+        schedule = process_gtfs_schedule(trips_df, calendar_df, route_df, simulation_date)
+        shape_ids = sample_routes.index
+        sample_schedule = schedule[schedule.shape_id.isin(shape_ids)]
 
-    return sample_routes
+    return sample_routes, sample_schedule
 
-def preprocess_data_to_files():
-    raise NotImplementedError
-    routes = initialize_random_routes()
+def initdata_to_files(routes, schedule):
+    data_path = Path("./tests/test_data")
+    schedule = schedule.set_index('shape_id')
 
-    routes.to_file(str(path / 'routes.geojson'), driver="GeoJSON")
-    schedule.to_csv(str(path / 'schedule.csv'))
+    routes.to_file(str(data_path / 'routes.geojson'), driver="GeoJSON")
+    schedule.to_csv(str(data_path / 'schedule.csv'))
+    return True
+    
+def preprocess_initdata_to_files():
+    data_path = Path("./tests/test_data")
+    routes, schedule = initialize_random_routes(sample_nr, simulation_date)
+    schedule = schedule.set_index('shape_id')
 
+    routes.to_file(str(data_path / 'routes.geojson'), driver="GeoJSON")
+    schedule.to_csv(str(data_path / 'schedule.csv'))
+    return True
 
 if __name__ == "__main__":
     def experiment_rt():
