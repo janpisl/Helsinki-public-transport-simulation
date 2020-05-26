@@ -177,13 +177,13 @@ def initialize_random_routes(sample_nr=20, simulation_date=pd.to_datetime('today
             new_linestrings = new_linestrings.rename(columns={0:'geometry'}).set_geometry('geometry')
             sample_routes = pd.concat([sample_routes, new_linestrings])
 
-        # write generated routes to file
-        # output_path = str(data_path / 'random_routes2.geojson')
-        # sample_routes.to_file(output_path, driver="GeoJSON")
-        
-        schedule = process_gtfs_schedule(trips_df, calendar_df, route_df, simulation_date)
-        shape_ids = sample_routes.index
-        sample_schedule = schedule[schedule.shape_id.isin(shape_ids)]
+    # write generated routes to file
+    # output_path = str(data_path / 'random_routes2.geojson')
+    # sample_routes.to_file(output_path, driver="GeoJSON")
+    
+    schedule = process_gtfs_schedule(trips_df, calendar_df, route_df, simulation_date)
+    shape_ids = sample_routes.index
+    sample_schedule = schedule[schedule.shape_id.isin(shape_ids)]
 
     return sample_routes, sample_schedule
 
