@@ -195,7 +195,7 @@ def initdata_to_files(routes, schedule):
     schedule.to_csv(str(data_path / 'schedule.csv'))
     return True
     
-def preprocess_initdata_to_files():
+def preprocess_initdata_to_files(sample_nr=20, simulation_date=pd.to_datetime('today')):
     data_path = Path("./tests/test_data")
     routes, schedule = initialize_random_routes(sample_nr, simulation_date)
     schedule = schedule.set_index('shape_id')
