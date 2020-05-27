@@ -1,4 +1,4 @@
-"route_id","start_time","type"
-"A1",3,"mock"
-"A1",60,"mock"
-"A1",200,"mock"
+"shape_id","d_time","route_type"
+"A1",00:00:03,-1
+"A1",00:00:59,-1
+"A1",00:02:00,-1

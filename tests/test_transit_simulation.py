@@ -38,6 +38,11 @@ def test_second_to_hour():
 def test_kmh_to_ms():
     assert ts.simulation.kmph_to_mps(3.6) == 1
 
+def test_time_of_day_to_seconds():
+    assert ts.simulation.time_of_day_to_seconds("01:00:00") == 60*60
+    assert ts.simulation.time_of_day_to_seconds("10:01:01") == 10*60*60 + 60 + 1
+    assert isinstance(ts.simulation.time_of_day_to_seconds("10:01:01"), int)
+
 def test_agents_to_gdf():
     agents = [ts.agent.MockAgent(LineString([(0,0), (10,10)]))]
     snapshot = ts.simulation.agents_to_gdf(agents)
