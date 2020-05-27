@@ -79,8 +79,6 @@ def start_simulation(data_dir: str, start_time:float, end_time:float, tick_len:f
     while sim_time < end_time:
         # check the schelude of new agents and add them to the simulation
         departures = schedule_df[(sim_time <= schedule_df.d_time) & (schedule_df.d_time < sim_time + tick_len)]
-        logger.debug(f'simulation time: {sim_time}')
-        logger.debug(f'new departures: {len(departures)}')
 
         for idx, schd_entry in departures.iterrows():
             logger.debug(f"departing agent: {schd_entry.shape_id}, route: {routes.shape_id}")
@@ -109,24 +107,9 @@ def start_simulation(data_dir: str, start_time:float, end_time:float, tick_len:f
     logger.info("Post-processing simulation data")
     logger.info("number of snapshots: " + str(len(snapshots)))
     result = gpd.pd.concat(snapshots)
+    logger.info(f'writing result data: {data_dir}/snapshots.[geojson, gpkg]')
     result.to_file(f'{data_dir}/snapshots.gpkg', driver="GPKG")
+    result.to_file(f'{data_dir}/snapshots.geojson', driver="GeoJSON")
+
 
     return True
-
-def calculate_travel_time(route) -> float:
-    """given a pandas dataframe with line geometry, calculate the total travel time
-    of all lines in seconds.
-    TODO: do actual simulation :)"""
-
-    # lets's pretend speed is 40 km/h
-    route['speed_limit'] = kmph_to_mps(40)
-
-    # length gives the polyline length in meters (or coordiante units?)
-    distance = route['geometry'].length
-
-    # highschool physics
-    route['travel_time'] = distance / route['speed_limit']
-
-    # sum of the travel time of all polylines
-    total_seconds = route['travel_time'].sum()
-    return total_seconds
