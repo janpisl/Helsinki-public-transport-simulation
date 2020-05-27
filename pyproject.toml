@@ -23,7 +23,7 @@ requires = [
     "paho-mqtt",
     "geopy",
     "assert_types",
-
+    "rtree",
 ]
 
 requires-python = ">=3.5,<4"
