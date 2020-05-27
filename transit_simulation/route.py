@@ -205,7 +205,7 @@ def preprocess_initdata_to_files(sample_nr=20, simulation_date=pd.to_datetime('t
     data_path = Path(data_path)
     routes, schedule = initialize_random_routes(sample_nr, simulation_date, data_path)
     schedule = schedule.set_index('shape_id')
-
+    routes['shape_id'] = routes.index
     routes.to_file(str(data_path / 'routes.geojson'), driver="GeoJSON")
     schedule.to_csv(str(data_path / 'schedule.csv'))
     return True

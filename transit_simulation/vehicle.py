@@ -13,7 +13,10 @@ def create_agent(route:LineString, agent_type:int) -> object:
     agetn type from the schdule file"""
     assert isinstance(agent_type, int)
     assert isinstance(route, LineString)
+    # agent type numbers based on HSL GTFS route types
     if agent_type == 0:
+        return Bus(route)
+    if agent_type == 701:
         return Bus(route)
     if agent_type == -1:
         return MockAgent(route)
