@@ -65,10 +65,9 @@ def start_simulation(data_dir: str, start_time:float, end_time:float, tick_len:f
     # if routes get big, use geopackage instead. But this is convenient for debugging
     logger.info('reading agent route geometries')
     routes = gpd.read_file(f'{data_dir}/routes.geojson').to_crs(GEOM_PROCESSING_CRS)
-    logger.debug(routes.columns)
 
     # table of timestamps (iso8601 time without date) for departing agents
-    logger.debug('reading agent schedule')
+    logger.info('reading agent schedule')
     schedule_df = gpd.pd.read_csv(f'{data_dir}/schedule.csv', comment='#')
     # convert time to seconds since start of day, to suit simulation
     schedule_df['d_time'] = schedule_df['d_time'].apply(time_of_day_to_seconds)
@@ -77,7 +76,7 @@ def start_simulation(data_dir: str, start_time:float, end_time:float, tick_len:f
     agents = []                 # the list of agents currently in the simulation
     snapshots = []              # for aggregating agent histories
 
-    logger.debug('entering main simulation loop')
+    logger.info('entering main simulation loop')
     while sim_time < end_time:
         # check the schelude of new agents and add them to the simulation
         departures = schedule_df[(sim_time <= schedule_df.d_time) & (schedule_df.d_time < sim_time + tick_len)]
@@ -89,7 +88,8 @@ def start_simulation(data_dir: str, start_time:float, end_time:float, tick_len:f
                 agent_type = schd_entry.route_type,
                 data_dir = data_dir
             )
-            agents.append(new_agent)
+            if new_agent is not None:
+                agents.append(new_agent)
 
         # handle tick and destruction of all currnet agents
         for idx, agent in enumerate(agents):
@@ -111,6 +111,8 @@ def start_simulation(data_dir: str, start_time:float, end_time:float, tick_len:f
     logger.info("number of snapshots: " + str(len(snapshots)))
     result = gpd.pd.concat(snapshots)
     logger.info(f'writing result data: {data_dir}/snapshots.[geojson, gpkg]')
+    logger.info(f'reprojecting result to: {WGS84}')
+    result = result.to_crs(WGS84)
     result.to_file(f'{data_dir}/snapshots.gpkg', driver="GPKG")
     result.to_file(f'{data_dir}/snapshots.geojson', driver="GeoJSON")
 

@@ -4,6 +4,7 @@ from pathlib import Path
 from shapely.geometry import Point
 from shapely.geometry import LineString, Point
 
+from loguru import logger
 import transit_simulation.read_speed_limit_at_location as read_speed
 import transit_simulation.congestion_model as congestion
 
@@ -14,10 +15,13 @@ def create_agent(route:LineString, agent_type:int, data_dir:Path=None) -> object
     assert isinstance(agent_type, int)
     assert isinstance(route, LineString)
     # agent type numbers based on HSL GTFS route types
-    if agent_type in [0, 701, 700, 109]:
+    if (agent_type == 0) | (700 <= agent_type < 800):
         return Bus(route, data_dir)
     if agent_type == -1:
         return MockAgent(route)
+        
+    logger.debug(f"unknown agent_type, using MockAgent. agent_type: {agent_type}")
+    return MockAgent(route)
 
 
 class Bus:
