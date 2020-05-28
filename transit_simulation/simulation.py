@@ -4,6 +4,8 @@ from loguru import logger
 import geopandas as gpd
 import numpy as np
 from typing import List
+from pathlib import Path
+
 from shapely.geometry import LineString, Point
 from transit_simulation.vehicle import create_agent
 from assert_types import assert_types
@@ -57,7 +59,7 @@ def start_simulation(data_dir: str, start_time:float, end_time:float, tick_len:f
     """simulation entry point, handel all simulation functions. This function is
     called from the comandline utility"""
 
-
+    data_dir = Path(data_dir)
     # shall be a file with linestirng geometry, each line has uinque id attribute
     # may be used for both generic agetns, and public transport
     # if routes get big, use geopackage instead. But this is convenient for debugging
@@ -81,10 +83,11 @@ def start_simulation(data_dir: str, start_time:float, end_time:float, tick_len:f
         departures = schedule_df[(sim_time <= schedule_df.d_time) & (schedule_df.d_time < sim_time + tick_len)]
 
         for idx, schd_entry in departures.iterrows():
-            logger.debug(f"departing agent: {schd_entry.shape_id}, route: {routes.shape_id}")
+            logger.debug(f"departing agent: {schd_entry.shape_id}, d_time: {schd_entry.d_time}")
             new_agent = create_agent(
                 route = routes[routes.shape_id == schd_entry.shape_id].geometry.iloc[0 ],
-                agent_type = schd_entry.route_type
+                agent_type = schd_entry.route_type,
+                data_dir = data_dir
             )
             agents.append(new_agent)
 
