@@ -19,7 +19,7 @@ def create_agent(route:LineString, agent_type:int, data_dir:Path=None) -> object
         return Bus(route, data_dir)
     if agent_type == -1:
         return MockAgent(route)
-        
+
     logger.debug(f"unknown agent_type, using MockAgent. agent_type: {agent_type}")
     return MockAgent(route)
 
@@ -42,7 +42,7 @@ class Bus:
 
     def tick(self, tick_len, time_of_day=8):
         self.speed, self.road_elements = Bus.check_agent_speed_limit(self.location, self.data_dir)
-        speed = self.check_agent_congested_speed(self.speed, self.road_elements, time_of_day)
+        speed = Bus.check_agent_congested_speed(self.speed, self.road_elements, time_of_day)
         distance = speed / 3.6 * tick_len # change km per h to meters per second
         next_location = Bus.calculate_next_location_along_route(self.location, self.route, distance)
         if self.location.equals(next_location):
@@ -63,7 +63,7 @@ class Bus:
         max_speed, el = read_speed.check_speed_limit_at_location(speed_data_path, current_location)
         return max_speed, el
 
-    def check_agent_congested_speed(self, speed, road_elements, time_of_day):
+    def check_agent_congested_speed(speed, road_elements, time_of_day:float):
         '''time_of_day: Hours elapsed since midnight'''
         congested_speed = congestion.congested_speed(speed, time_of_day, road_elements)
 
@@ -80,11 +80,13 @@ class MockAgent():
         self.route = route
         self.done = False
         self.type = 'mock'
+        self.id = uuid.uuid4()
+        self.speed = 10
         self.location = Point(route.coords[0])
 
-    def tick(self,tick_len):
+    def tick(self,tick_len, time_of_day=None):
 
-        speed = 10 # meters per second
+        speed = self.speed
         distance = speed * tick_len
         self.location = MockAgent.calculate_next_location_along_route(self.location, self.route, distance)
 

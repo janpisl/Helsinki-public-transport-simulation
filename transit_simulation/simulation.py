@@ -92,8 +92,9 @@ def start_simulation(data_dir: str, start_time:float, end_time:float, tick_len:f
                 agents.append(new_agent)
 
         # handle tick and destruction of all currnet agents
+        time_of_day = sim_time / 60 / 60 # hours since midnight
         for idx, agent in enumerate(agents):
-            agent.tick(tick_len)
+            agent.tick(tick_len, time_of_day=time_of_day)
 
             if agent.done:
                 del agents[idx]
