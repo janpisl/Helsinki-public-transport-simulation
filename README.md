@@ -5,12 +5,6 @@ Helsinki public transport simulation
 Modeling public transportation in Helsinki area to identify parts vulnerable to delays caused by congestion
 
 
-Features
---------
-
-* TODO
-
-
 Installing
 ----------
 
@@ -25,6 +19,7 @@ Obtaining a Copy for Development
 Clone the repo from GitHub.
 
 ```sh
+# clone (or extract the source distribuiiton archive)
 git clone git@github.com:janpisl/Helsinki-public-transport-simulation.git
 cd Helsinki-public-transport-simulation
 # install the venv package if you don't have it
